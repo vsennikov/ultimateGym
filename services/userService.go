@@ -59,3 +59,19 @@ func (u *UserService) CreateTelegramUser(user models.UserTgDTO) (uint, error) {
 func (u *UserService) DeleteUser(id uint) error {
 	return u.repository.DeleteUser(id)
 }
+
+func (u *UserService) Login(login models.UserLoginDTO) (string, error) {
+
+	user, err := u.repository.GetUserByEmail(login.Email)
+	if err != nil {
+		return "", errors.New("user not found")
+	}
+	if !checkPasswordHash(login.Password, user.PasswordHash) {
+		return "", errors.New("invalid password")
+	}
+	token, err := generateJWT(user.ID)
+	if err != nil {
+		return "", errors.New("failed to generate token")
+	}
+	return token, nil
+}

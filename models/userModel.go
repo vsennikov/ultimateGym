@@ -22,3 +22,8 @@ type UserTgDTO struct {
 	BotID			int64	`json:"bot_id" binding:"required"`
 	TelegramChatID	int64	`json:"telegram_chat_id" binding:"required"`
 }
+
+type UserLoginDTO struct {
+	Email		string	`json:"email" binding:"required,email"`
+	Password	string	`json:"password" binding:"required"`
+}
