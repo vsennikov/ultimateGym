@@ -11,6 +11,8 @@ import (
 type UserDBInterface interface {
 	CreateUser(user *models.User) (uint, error)
 	DeleteUser(id uint) error
+	GetUserByEmail(email string) (*models.User, error)
+	GetUserByTGID(chatID int64) (*models.User, error)
 }
 
 type UserService struct {
@@ -22,26 +24,9 @@ func NewUserService(r UserDBInterface) *UserService {
 }
 
 func (u *UserService) CreateUser(user models.UserDTO) (uint, error) {
-	if user.TelegramChatID == 0 && user.Email == "" {
-		return 0, errors.New("invalid user data")
+	if _, err := u.repository.GetUserByEmail(user.Email); err == nil {
+		return 0, errors.New("user already exists")
 	}
-	if user.TelegramChatID != 0 && user.Email != "" {
-		return 0, errors.New("invalid user data")
-	}
-	if user.TelegramChatID == 0 {
-		valid := isEmailValid(user.Email)
-		if !valid  {
-			return 0, errors.New("invalid email")
-		}
-		if user.Password == "" {
-			return 0, errors.New("invalid user data")
-		}
-		return u.CreateStandartUser(user)
-	}
-	return u.CreateTelegramUser(user)
-}
-
-func (u *UserService) CreateStandartUser(user models.UserDTO) (uint, error) {
 	hashedPassword, err := hashPassword(user.Password)
 	if err != nil {
 		return 0, err
@@ -55,9 +40,13 @@ func (u *UserService) CreateStandartUser(user models.UserDTO) (uint, error) {
 	return u.repository.CreateUser(newUser)
 }
 
-func (u *UserService) CreateTelegramUser(user models.UserDTO) (uint, error) {
-	if user.TelegramChatID == 0{
+func (u *UserService) CreateTelegramUser(user models.UserTgDTO) (uint, error) {
+
+	if user.TelegramChatID == 0 || user.BotID == 0 || !checkBotID(user.BotID) {
 		return 0, errors.New("invalid user data")
+	}
+	if _, err := u.repository.GetUserByTGID(user.TelegramChatID); err == nil {
+		return 0, errors.New("user already exists")
 	}
 	newUser := &models.User{
 		Username: user.Username,

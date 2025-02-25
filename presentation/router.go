@@ -29,6 +29,17 @@ func InitController() {
 
 func (r *Router) InitRouter() {
 	router := gin.Default()
-	router.POST("/registration", r.UserController.Registration)
+
+	api :=router.Group("/api")
+	{
+		v1 := api.Group("/v1")
+		{
+			v1.POST("/registration", r.UserController.Registration)
+		}
+		tg := api.Group("/tg")
+		{
+			tg.POST("/registration", r.UserController.TelegramRegistration)
+		}
+	}
 	router.Run()
 }
