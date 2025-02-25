@@ -2,7 +2,9 @@ package services
 
 import (
 	"errors"
+	"os"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/vsennikov/ultimateGym/models"
 )
 
@@ -74,4 +76,22 @@ func (u *UserService) Login(login models.UserLoginDTO) (string, error) {
 		return "", errors.New("failed to generate token")
 	}
 	return token, nil
+}
+
+func (u *UserService) DecodeToken(tokenString string) (uint, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		_, ok := token.Method.(*jwt.SigningMethodHMAC)
+		if !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err != nil {
+		return 0, err
+	}
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		userID := uint(claims["user_id"].(float64))
+		return userID, nil
+	}
+	return 0, errors.New("invalid token")
 }

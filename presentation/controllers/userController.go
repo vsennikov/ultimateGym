@@ -9,6 +9,7 @@ type UserServiceInterface interface {
 	CreateUser(user models.UserDTO) (uint, error)
 	CreateTelegramUser(user models.UserTgDTO) (uint, error)
 	DeleteUser(id uint) error
+	DecodeToken(tokenString string) (uint, error)
 }
 
 type UserController struct {
