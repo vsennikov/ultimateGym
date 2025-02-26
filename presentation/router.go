@@ -11,22 +11,29 @@ import (
 type Router struct {
 	UserController *controllers.UserController
 	LoginController *controllers.LoginController
+	ExerciseController *controllers.ExerciseController
 }
 
-func NewRouter(u *controllers.UserController, l *controllers.LoginController) *Router {
+func NewRouter(u *controllers.UserController, l *controllers.LoginController, e *controllers.ExerciseController) *Router {
 	return &Router{
 		UserController: u,
 		LoginController: l,
+		ExerciseController: e,
 	}
 }
 
 func InitController() {
 	userDB := infrastructure.UserDB{}
+	exercisesDB := infrastructure.ExerciseDB{}
+
 	userService := services.NewUserService(&userDB)
+	exercisesService := services.NewExerciseService(&exercisesDB)
+
 	userController := controllers.NewUserController(userService)
 	loginController := controllers.NewLoginController(userService)
-	
-	router := NewRouter(userController, loginController)
+	exerciseController := controllers.NewExerciseController(exercisesService, userService)
+
+	router := NewRouter(userController, loginController, exerciseController)
 	router.InitRouter()
 }
 
@@ -39,10 +46,14 @@ func (r *Router) InitRouter() {
 		{
 			v1.POST("/registration", r.UserController.Registration)
 			v1.POST("/login", r.LoginController.Login)
-		}
-		tg := api.Group("/tg")
-		{
-			tg.POST("/registration", r.UserController.TelegramRegistration)
+			v1.POST("/exercise", r.ExerciseController.CreateExercise)
+			v1.GET("/exercises", r.ExerciseController.GetAllExercises)
+			v1.GET("/user/exercises", r.ExerciseController.GetAllUserExercises)
+			v1.GET("/exercises/:muscle_group", r.ExerciseController.GetAllExercisesByType)
+			v1.GET("/user/exercises/:muscle_group", r.ExerciseController.GetAllUserExercisesByType)
+			v1.GET("/exercise/:name", r.ExerciseController.GetExerciseByName)
+			v1.DELETE("/exercise/:name", r.ExerciseController.DeleteExercise)
+			v1.PUT("/exercise/:name", r.ExerciseController.UpdatedExercise)
 		}
 	}
 	router.Run()

@@ -33,9 +33,3 @@ func (u *UserDB) GetUserByEmail(email string) (*models.User, error) {
 	err := getUserDB().Where("email = ?", email).First(&user).Error
 	return &user, err
 }
-
-func (u *UserDB) GetUserByTGID(chatID int64) (*models.User, error) {
-	var user models.User
-	err := getUserDB().Where("telegram_chat_id = ?", chatID).First(&user).Error
-	return &user, err
-}

@@ -14,7 +14,6 @@ type UserDBInterface interface {
 	CreateUser(user *models.User) (uint, error)
 	DeleteUser(id uint) error
 	GetUserByEmail(email string) (*models.User, error)
-	GetUserByTGID(chatID int64) (*models.User, error)
 }
 
 type UserService struct {
@@ -37,22 +36,6 @@ func (u *UserService) CreateUser(user models.UserDTO) (uint, error) {
 		Username: user.Username,
 		Email: user.Email,
 		PasswordHash: hashedPassword,
-		IsActive: true,
-	}
-	return u.repository.CreateUser(newUser)
-}
-
-func (u *UserService) CreateTelegramUser(user models.UserTgDTO) (uint, error) {
-
-	if user.TelegramChatID == 0 || user.BotID == 0 || !checkBotID(user.BotID) {
-		return 0, errors.New("invalid user data")
-	}
-	if _, err := u.repository.GetUserByTGID(user.TelegramChatID); err == nil {
-		return 0, errors.New("user already exists")
-	}
-	newUser := &models.User{
-		Username: user.Username,
-		TelegramChatID: user.TelegramChatID,
 		IsActive: true,
 	}
 	return u.repository.CreateUser(newUser)

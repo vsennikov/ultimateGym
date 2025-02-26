@@ -35,7 +35,7 @@ func (e *ExerciseDB) DeleteExercise(id uint) error {
 
 
 func (e *ExerciseDB) UpdatedExercise(id uint, updates map[string]interface{}) error {
-	err := getExerciseDB().Where("id = ?", id).Updates(updates).Error
+	err := getExerciseDB().Model(&models.Exercise{}).Where("id = ?", id).Updates(updates).Error
 	return err
 }
 
@@ -45,17 +45,28 @@ func (e *ExerciseDB) GetExerciseByID(id uint) (*models.Exercise, error) {
 	return &exercise, err
 }
 
-func (e *ExerciseDB) GetExerciseByName(name string) (*models.Exercise, error) {
+func (e *ExerciseDB) GetExerciseByName(name string, userID uint) (*models.Exercise, error) {
 	var exercise models.Exercise
-	err := getExerciseDB().Where("name = ?", name).First(&exercise).Error
+	err := getExerciseDB().
+	Where("user_id IS NULL OR user_id = ? ", userID).
+	Where("name = ?", name).First(&exercise).Error
 	return &exercise, err
 }
 
-func (e *ExerciseDB) GetAllExercises() ([]models.Exercise, error) {
+func (e *ExerciseDB) GetUserExerciseByName (name string, userID uint) (*models.Exercise, error) {
+	var exercise models.Exercise
+	err := getExerciseDB().
+	Where("user_id = ? ", userID).
+	Where("name = ?", name).First(&exercise).Error
+	return &exercise, err
+}
+
+func (e *ExerciseDB) GetAllExercises(userID uint) ([]models.Exercise, error) {
 	var exercises []models.Exercise
-	err := getExerciseDB().Find(&exercises).Error
+	err := getExerciseDB().Where("user_id IS NULL OR user_id = ? ", userID).Find(&exercises).Error
 	return exercises, err
 }
+
 
 func (e *ExerciseDB) GetAllUserExercises(userID uint) ([]models.Exercise, error) {
 	var exercises []models.Exercise
@@ -63,8 +74,21 @@ func (e *ExerciseDB) GetAllUserExercises(userID uint) ([]models.Exercise, error)
 	return exercises, err
 }
 
-func (e *ExerciseDB) GetExercisesByType(muscle_group string) ([]models.Exercise, error) {
+func (e *ExerciseDB) GetExercisesByType(userId uint, muscle_group string) ([]models.Exercise, error) {
 	var exercises []models.Exercise
-	err := getExerciseDB().Where("muscle_group = ?", muscle_group).Find(&exercises).Error
+	err := getExerciseDB().
+	Where("user_id IS NULL OR user_id = ? ", userId).
+	Where("muscle_group = ?", muscle_group).
+	Find(&exercises).Error
+	return exercises, err
+}
+
+
+func (e *ExerciseDB) GetUserExercisesByType(userId uint, muscle_group string) ([]models.Exercise, error) {
+	var exercises []models.Exercise
+	err := getExerciseDB().
+	Where("user_id = ? ", userId).
+	Where("muscle_group = ?", muscle_group).
+	Find(&exercises).Error
 	return exercises, err
 }
